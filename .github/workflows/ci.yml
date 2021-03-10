@@ -29,7 +29,7 @@ jobs:
         id: root-cache
         with:
           path: /home/runner/.local/share/virtualenvs/pangeo-forge-aws-bakery-${{ steps.hashes.outputs.root }}
-          key: ${{ hashFiles('/home/runner/work/pangeo-forge-aws-bakery/pangeo-forge-aws-bakery/Pipfile.lock') }}
+          key: root-${{ hashFiles('/home/runner/work/pangeo-forge-aws-bakery/pangeo-forge-aws-bakery/Pipfile.lock') }}
 
       - name: Install root dependencies
         if: steps.root-cache.outputs.cache-hit != 'true'
