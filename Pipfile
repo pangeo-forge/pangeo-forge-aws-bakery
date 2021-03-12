@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"aws-cdk.core" = ">=1.92.0"
+"aws-cdk.core" = "==1.92.0"
 
 [dev-packages]
 black = ">=20.8b1"
