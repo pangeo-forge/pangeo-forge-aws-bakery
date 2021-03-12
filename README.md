@@ -24,6 +24,8 @@ To develop on this project, you should have the following installed:
 
 If you're developing on MacOS, all of the above (apart from AWS CDK) can be installed using [homebrew](https://brew.sh/)
 
+If you're developing on Windows, we'd recommend using either [Git BASH](https://gitforwindows.org/) or [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+
 ## Getting started 🏃‍♀️
 
 To get setup for overall development, ensure you've installed all the above [requirements](#requirements). You can then run the following to install all development dependencies (NPM & Python):
