@@ -16,9 +16,9 @@ This repository serves as the provider of an AWS CDK Application which deploys t
 
 To develop on this project, you should have the following installed:
 
-* NVM [Node Version Manager](https://github.com/nvm-sh/nvm) / Node 14
+* Node 14 (We recommend using NVM [Node Version Manager](https://github.com/nvm-sh/nvm))
 * [AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html) - There is a `package.json` in the repository, it's recommended to run `npm install` in the repository root and make use of `npx <command>` rather than globally installing AWS CDK
-* [pyenv](https://github.com/pyenv/pyenv) / Python 3.8.*
+* Python 3.8.* (We recommend using [pyenv](https://github.com/pyenv/pyenv))
 * [pipenv](https://github.com/pypa/pipenv)
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html)
 
