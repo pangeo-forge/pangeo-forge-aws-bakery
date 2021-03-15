@@ -11,6 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      # Required because ubuntu-latest (20.04) is missing Python 2
+      # Some dependencies use it https://github.com/actions/virtual-environments/issues/1816
+      - name: Set up Python 2.7.18
+        uses: actions/setup-python@v2
+        with:
+          python-version: 2.7.18
+
       - name: Set up Python 3.8.8
         uses: actions/setup-python@v2
         with:
