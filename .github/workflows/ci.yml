@@ -18,6 +18,10 @@ jobs:
         with:
           python-version: 2.7.18
 
+      - name: Setup Python 2 pip
+        run: |
+          curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py, python2 get-pip.py
+
       - name: Set up Python 3.8.8
         uses: actions/setup-python@v2
         with:
