@@ -21,6 +21,7 @@ To develop on this project, you should have the following installed:
 * Python 3.8.* (We recommend using [pyenv](https://github.com/pyenv/pyenv))
 * [pipenv](https://github.com/pypa/pipenv)
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html)
+* [Docker](https://docs.docker.com/get-docker/)
 
 If you're developing on MacOS, all of the above (apart from AWS CDK) can be installed using [homebrew](https://brew.sh/)
 
@@ -47,6 +48,7 @@ OWNER="<your-name>"
 IDENTIFIER="<a unique value to tie to your deployment>"
 AWS_DEFAULT_REGION="<the AWS region you're deploying to>"
 AWS_DEFAULT_PROFILE="<your named AWS CLI Profile to use for deployment>"
+RUNNER_TOKEN_SECRET_ARN="<ARN of your Runner Token Secret>" # This is outlined in Deployment - Standard Deployments
 ```
 
 An example that you can modify and rename to `.env` is provided: `example.env`
@@ -88,6 +90,21 @@ A `Makefile` is available in the root of the repository to abstract away commonl
 ## Prerequisites
 
 Firstly, ensure you've installed all the project requirements as described [here](#requirements) and [here](#getting-started-🏃‍♀️).
+
+### cloud.prefect.io Runner Token
+
+To successfully communicate with Prefect Cloud, the ECS Agent we deploy needs access to a `RUNNER` token [outlined here](https://docs.prefect.io/orchestration/agents/overview.html#tokens).
+
+You should create a Secret in AWS Secrets Manager (in your deployment region) in the form:
+
+```
+{
+    "RUNNER_TOKEN": "<The value of the token>"
+}
+```
+
+Take a note of the ARN for the token and put it in your `.env` file under the key of `RUNNER_TOKEN_SECRET_ARN`.
+
 
 ## Standard Deployments
 
