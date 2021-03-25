@@ -9,13 +9,13 @@ install-dev:
 	pipenv install --dev
 
 lint:
-	pipenv run flake8 cdk/
-	pipenv run isort --check-only --profile black cdk/
-	pipenv run black --check --diff cdk/
+	pipenv run flake8 cdk/ test/
+	pipenv run isort --check-only --profile black cdk/ test/
+	pipenv run black --check --diff cdk/ test/
 
 format:
-	pipenv run isort --profile black cdk/
-	pipenv run black cdk/
+	pipenv run isort --profile black cdk/ test/
+	pipenv run black cdk/ test/
 
 diff:
 	pipenv run npx cdk diff --app cdk/app.py || true

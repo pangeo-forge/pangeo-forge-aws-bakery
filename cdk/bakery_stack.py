@@ -41,11 +41,26 @@ class BakeryStack(core.Stack):
 
         cluster = aws_ecs.Cluster(self, id=f"bakery-cluster-{identifier}", vpc=vpc)
 
+        ecs_task_role = aws_iam.Role(
+            self,
+            id=f"prefect-ecs-task-role-{identifier}",
+            assumed_by=aws_iam.ServicePrincipal(service="ecs-tasks.amazonaws.com"),
+        )
+
+        bucket.grant_read_write(ecs_task_role)
+
+        ecs_task_role.add_managed_policy(
+            aws_iam.ManagedPolicy.from_aws_managed_policy_name(
+                managed_policy_name="AmazonECS_FullAccess"
+            )
+        )
+
         prefect_ecs_agent_task_definition = aws_ecs.FargateTaskDefinition(
             self,
             id=f"prefect-ecs-agent-task-definition-{identifier}",
             cpu=512,
             memory_limit_mib=2048,
+            task_role=ecs_task_role,
         )
 
         runner_token_secret = aws_ecs.Secret.from_secrets_manager(
@@ -66,9 +81,13 @@ class BakeryStack(core.Stack):
                 "PREFECT__CLOUD__AGENT__LABELS": os.environ["PREFECT_AGENT_LABELS"]
             },
             secrets={"PREFECT__CLOUD__AGENT__AUTH_TOKEN": runner_token_secret},
+            command=[
+                "--cluster",
+                cluster.cluster_arn,
+                "--task-role-arn",
+                ecs_task_role.role_arn,
+            ],
         )
-
-        bucket.grant_read_write(prefect_ecs_agent_task_definition.task_role)
 
         prefect_ecs_agent_service = (
             aws_ecs_patterns.ApplicationLoadBalancedFargateService(

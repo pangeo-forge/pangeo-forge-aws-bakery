@@ -1,19 +1,12 @@
 import json
 import os
-from datetime import datetime
 
 import prefect
-from prefect import task, Flow, storage
-from prefect.engine.results import S3Result
-from prefect.run_configs import UniversalRun
+from prefect import Flow, storage, task
+from prefect.run_configs import ECSRun
 
 
-@task(
-    result=S3Result(
-        bucket=os.environ["PREFECT_FLOW_STORAGE_BUCKET"],
-        location=f"{datetime.now().strftime('%Y/%m/%d/%H-%M-%S-')}result.txt"
-    )
-)
+@task
 def say_hello():
     logger = prefect.context.get("logger")
     logger.info("Hello, Cloud")
@@ -25,6 +18,9 @@ with Flow(
     storage=storage.S3(
         bucket=os.environ["PREFECT_FLOW_STORAGE_BUCKET"],
     ),
-    run_config=UniversalRun(labels=json.loads(os.environ["PREFECT_FLOW_LABELS"]))
+    run_config=ECSRun(
+        image="prefecthq/prefect:0.14.13-python3.8",
+        labels=json.loads(os.environ["PREFECT_FLOW_LABELS"]),
+    ),
 ) as flow:
     hello_result = say_hello()
