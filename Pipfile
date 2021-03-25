@@ -10,11 +10,13 @@ name = "pypi"
 "aws-cdk.aws-iam" = "==1.94.1"
 "aws-cdk.aws-ecs-patterns" = "==1.94.1"
 "aws-cdk.aws-secretsmanager" = "==1.94.1"
+"aws-cdk.aws-s3" = "==1.94.1"
 
 [dev-packages]
 black = "==20.8b1"
 flake8 = "==3.8.4"
 isort = "==5.7.0"
+prefect = {version = "==0.14.13", extras = ["aws"]}
 
 [requires]
 python_version = "3.8"

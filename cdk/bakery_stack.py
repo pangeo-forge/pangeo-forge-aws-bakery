@@ -5,6 +5,7 @@ from aws_cdk import (
     aws_ecs,
     aws_ecs_patterns,
     aws_iam,
+    aws_s3,
     aws_secretsmanager,
     core,
 )
@@ -15,6 +16,13 @@ class BakeryStack(core.Stack):
         self, scope: core.Construct, construct_id: str, identifier: str, **kwargs
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
+        bucket = aws_s3.Bucket(
+            self,
+            id=f"flow-storage-bucket-{identifier}",
+            auto_delete_objects=True,
+            removal_policy=core.RemovalPolicy.DESTROY,
+        )
 
         vpc = aws_ec2.Vpc(
             self,
@@ -54,8 +62,13 @@ class BakeryStack(core.Stack):
             image=aws_ecs.ContainerImage.from_asset(directory="cdk/agent"),
             port_mappings=[aws_ecs.PortMapping(container_port=8080, host_port=8080)],
             logging=aws_ecs.LogDriver.aws_logs(stream_prefix="ecs-agent"),
+            environment={
+                "PREFECT__CLOUD__AGENT__LABELS": os.environ["PREFECT_AGENT_LABELS"]
+            },
             secrets={"PREFECT__CLOUD__AGENT__AUTH_TOKEN": runner_token_secret},
         )
+
+        bucket.grant_read_write(prefect_ecs_agent_task_definition.task_role)
 
         prefect_ecs_agent_service = (
             aws_ecs_patterns.ApplicationLoadBalancedFargateService(
