@@ -3,6 +3,7 @@ import os
 
 import prefect
 from prefect import Flow, storage, task
+from prefect.executors import DaskExecutor
 from prefect.run_configs import ECSRun
 
 
@@ -21,6 +22,10 @@ with Flow(
     run_config=ECSRun(
         image="prefecthq/prefect:0.14.13-python3.8",
         labels=json.loads(os.environ["PREFECT_FLOW_LABELS"]),
+    ),
+    executor=DaskExecutor(
+        cluster_class="dask_cloudprovider.aws.FargateCluster",
+        cluster_kwargs={"image": "prefecthq/prefect:0.14.13-python3.8"},
     ),
 ) as flow:
     hello_result = say_hello()
