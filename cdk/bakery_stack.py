@@ -4,6 +4,7 @@ from aws_cdk import (
     aws_ec2,
     aws_ecs,
     aws_ecs_patterns,
+    aws_ecr,
     aws_iam,
     aws_s3,
     aws_secretsmanager,
@@ -39,7 +40,11 @@ class BakeryStack(core.Stack):
             max_azs=3,
         )
 
-        cluster = aws_ecs.Cluster(self, id=f"bakery-cluster-{identifier}", vpc=vpc)
+        cluster = aws_ecs.Cluster(
+            self,
+            id=f"bakery-cluster-{identifier}",
+            vpc=vpc,
+        )
 
         ecs_task_role = aws_iam.Role(
             self,
@@ -74,7 +79,13 @@ class BakeryStack(core.Stack):
 
         prefect_ecs_agent_task_definition.add_container(
             id=f"prefect-ecs-agent-task-container-{identifier}",
-            image=aws_ecs.ContainerImage.from_asset(directory="cdk/agent"),
+            image=aws_ecs.ContainerImage.from_ecr_repository(
+                aws_ecr.Repository.from_repository_name(
+                    self,
+                    id=f"pangeo-forge-aws-bakery-agent-repo-{identifier}",
+                    repository_name="pangeo-forge-aws-bakery-agent"
+                )
+            ),
             port_mappings=[aws_ecs.PortMapping(container_port=8080, host_port=8080)],
             logging=aws_ecs.LogDriver.aws_logs(stream_prefix="ecs-agent"),
             environment={
@@ -104,4 +115,28 @@ class BakeryStack(core.Stack):
 
         prefect_ecs_agent_service.target_group.configure_health_check(
             path="/api/health", port="8080"
+        )
+
+        core.CfnOutput(
+            self,
+            id=f"prefect-task-role-arn-output-{identifier}",
+            value=ecs_task_role.role_arn,
+        )
+
+        core.CfnOutput(
+            self,
+            id=f"prefect-execution-role-arn-output-{identifier}",
+            value=prefect_ecs_agent_task_definition.execution_role.role_arn,
+        )
+
+        core.CfnOutput(
+            self,
+            id=f"prefect-cluster-arn-output-{identifier}",
+            value=cluster.cluster_arn,
+        )
+
+        core.CfnOutput(
+            self,
+            id=f"prefect-storage-bucket-name-output-{identifier}",
+            value=bucket.bucket_name,
         )
