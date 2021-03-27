@@ -96,7 +96,7 @@ class BakeryStack(core.Stack):
                 "--cluster",
                 cluster.cluster_arn,
                 "--task-role-arn",
-                ecs_task_role.role_arn,
+                ecs_task_role.role_arn
             ],
         )
 
@@ -117,26 +117,47 @@ class BakeryStack(core.Stack):
             path="/api/health", port="8080"
         )
 
-        core.CfnOutput(
+        ecs_task_execution_role = aws_iam.Role(
             self,
-            id=f"prefect-task-role-arn-output-{identifier}",
-            value=ecs_task_role.role_arn,
+            "taskExecutionRole",
+            assumed_by=aws_iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
+            managed_policies=[
+                aws_iam.ManagedPolicy.from_aws_managed_policy_name(
+                    "service-role/AmazonECSTaskExecutionRolePolicy"
+                ),
+            ],
         )
 
         core.CfnOutput(
             self,
-            id=f"prefect-execution-role-arn-output-{identifier}",
-            value=prefect_ecs_agent_task_definition.execution_role.role_arn,
+            id=f"prefect-task-role-arn-output-{identifier}",
+            export_name=f"prefect-task-role-arn-output-{identifier}",
+            value=ecs_task_role.role_arn,
         )
+
+        #  core.CfnOutput(
+            #  self,
+            #  id=f"prefect-execution-role-arn-output-{identifier}",
+            #  value=prefect_ecs_agent_task_definition.execution_role.role_arn,
+        #  )
 
         core.CfnOutput(
             self,
             id=f"prefect-cluster-arn-output-{identifier}",
+            export_name=f"prefect-cluster-arn-output-{identifier}",
             value=cluster.cluster_arn,
         )
 
         core.CfnOutput(
             self,
             id=f"prefect-storage-bucket-name-output-{identifier}",
+            export_name=f"prefect-storage-bucket-name-output-{identifier}",
             value=bucket.bucket_name,
+        )
+
+        core.CfnOutput(
+            self,
+            id=f"prefect-task-execution-role-{identifier}",
+            export_name=f"prefect-task-execution-role-{identifier}",
+            value=ecs_task_execution_role.role_arn,
         )
