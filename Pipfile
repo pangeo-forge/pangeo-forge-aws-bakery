@@ -17,7 +17,7 @@ name = "pypi"
 black = "==20.8b1"
 flake8 = "==3.8.4"
 isort = "==5.7.0"
-prefect = {version = "==0.14.13", extras = ["aws"]}
+prefect = "==0.14.13"
 
 [requires]
 python_version = "3.8"

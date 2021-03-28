@@ -7,6 +7,9 @@ install:
 install-dev:
 	npm install
 	pipenv install --dev
+	pipenv run pip install botocore==1.19.52
+	pipenv run pip install dask-cloudprovider[aws]==2021.3.1
+	pipenv run pip install boto3==1.16.52
 
 lint:
 	pipenv run flake8 cdk/ test/
