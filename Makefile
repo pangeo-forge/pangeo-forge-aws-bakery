@@ -10,6 +10,9 @@ install-dev:
 	pipenv run pip install botocore==1.19.52
 	pipenv run pip install dask-cloudprovider[aws]==2021.3.1
 	pipenv run pip install boto3==1.16.52
+	pipenv run pip install xarray
+	pipenv run pip install zarr
+	pipenv run pip install git+https://github.com/pangeo-forge/pangeo-forge
 
 lint:
 	pipenv run flake8 cdk/ test/
