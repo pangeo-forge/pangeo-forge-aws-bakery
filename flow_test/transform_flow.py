@@ -2,7 +2,6 @@ import os
 import yaml
 import json
 import boto3
-import prefect
 import pandas as pd
 from flow_test.transform_tasks.http import download
 from flow_test.transform_tasks.xarray import combine_and_write, chunk
@@ -11,38 +10,45 @@ from prefect import Flow, Parameter, task, unmapped, storage
 from prefect.run_configs import ECSRun
 from prefect.engine.executors import DaskExecutor
 
-
 identifier = os.environ["IDENTIFIER"]
 project = os.environ["PREFECT_PROJECT"]
 worker_image = os.environ["PREFECT_DASK_WORKER_IMAGE"]
-storage_bucket = os.environ["PREFECT_FLOW_STORAGE_BUCKET"]
-
 cloudformation = boto3.resource('cloudformation')
 stack = cloudformation.Stack(f"pangeo-forge-aws-bakery-{identifier}")
-
-execution_role_output = next((output for output in stack.outputs 
+execution_role_output = next((
+    output for output in stack.outputs
     if output.get("ExportName") == f"prefect-task-execution-role-{identifier}"),
-        None)["OutputValue"]
+    None)["OutputValue"]
 
-task_role_output = next((output for output in stack.outputs 
+task_role_output = next((
+    output for output in stack.outputs
     if output.get("ExportName") == f"prefect-task-role-arn-output-{identifier}"),
-        None)["OutputValue"]
+    None)["OutputValue"]
 
-cluster_output = next((output for output in stack.outputs 
+cluster_output = next((
+    output for output in stack.outputs
     if output.get("ExportName") == f"prefect-cluster-arn-output-{identifier}"),
-        None)["OutputValue"]
+    None)["OutputValue"]
 
-security_group_output = next((output for output in stack.outputs 
+security_group_output = next((
+    output for output in stack.outputs
     if output.get("ExportName") == f"prefect-security-group-output-{identifier}"),
-        None)["OutputValue"]
+    None)["OutputValue"]
 
-vpc_output = next((output for output in stack.outputs 
+vpc_output = next((
+    output for output in stack.outputs
     if output.get("ExportName") == f"prefect-vpc-output-{identifier}"),
-        None)["OutputValue"]
+    None)["OutputValue"]
 
-cache_bucket_output = next((output for output in stack.outputs 
+cache_bucket_output = next((
+    output for output in stack.outputs
     if output.get("ExportName") == f"prefect-cache-bucket-name-output-{identifier}"),
-        None)["OutputValue"]
+    None)["OutputValue"]
+
+storage_bucket_output = next((
+    output for output in stack.outputs
+    if output.get("ExportName") == f"prefect-storage-bucket-name-output-{identifier}"),
+    None)["OutputValue"]
 
 definition = yaml.safe_load(
     """
@@ -75,6 +81,7 @@ executor = DaskExecutor(
     },
 )
 
+
 @task
 def source_url(day: str) -> str:
     """
@@ -88,10 +95,11 @@ def source_url(day: str) -> str:
     )
     return source_url_pattern.format(day=day)
 
+
 with Flow(
     "dask-transform-flow",
     storage=storage.S3(
-        bucket=storage_bucket
+        bucket=storage_bucket_output
     ),
     run_config=ECSRun(
         image=worker_image,
@@ -122,13 +130,13 @@ with Flow(
     # https://docs.prefect.io/core/concepts/mapping.html#unmapped-inputs
     # nc_sources will be a list of cached URLs, one per input day.
     nc_sources = download.map(
-        sources, 
+        sources,
         cache_location=unmapped(
             f"s3://{cache_bucket_output}/cache/dask_transform_flow.zarr"
         )
     )
     chunked = chunk(nc_sources, size=5)
-    target =  f"s3://{cache_bucket_output}/target/dask_transform_flow.zarr"
+    target = f"s3://{cache_bucket_output}/target/dask_transform_flow.zarr"
     writes = combine_and_write.map(
         chunked,
         unmapped(target),

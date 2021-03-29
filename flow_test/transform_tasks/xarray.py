@@ -4,6 +4,8 @@ import fsspec
 import xarray as xr
 from prefect import task
 from pangeo_forge import utils
+
+
 @task
 def chunk(sources: List[Any], size: int) -> List[Tuple[Any, ...]]:
     """
@@ -15,6 +17,7 @@ def chunk(sources: List[Any], size: int) -> List[Tuple[Any, ...]]:
     [(1, 2), (3, 4), (5,)]
     """
     return list(utils.chunked_iterable(sources, size))
+
 
 @task
 def combine_and_write(

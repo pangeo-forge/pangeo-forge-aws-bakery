@@ -11,9 +11,15 @@ identifier = os.environ["IDENTIFIER"]
 project = os.environ["PREFECT_PROJECT"]
 cloudformation = boto3.resource('cloudformation')
 stack = cloudformation.Stack(f"pangeo-forge-aws-bakery-{identifier}")
-execution_role_output = next((output for output in stack.outputs 
-    if output["ExportName"] == f"prefect-task-execution-role-{identifier}"), None)
-print(execution_role_output)
+execution_role_output = next((
+    output for output in stack.outputs
+    if output.get("ExportName") == f"prefect-task-execution-role-{identifier}"),
+    None)["OutputValue"]
+
+storage_bucket_output = next((
+    output for output in stack.outputs
+    if output.get("ExportName") == f"prefect-storage-bucket-name-output-{identifier}"),
+    None)["OutputValue"]
 
 definition = yaml.safe_load(
     """
@@ -24,7 +30,7 @@ definition = yaml.safe_load(
         - name: flow
     """
 )
-definition["executionRoleArn"] = execution_role_output["OutputValue"]
+definition["executionRoleArn"] = execution_role_output
 
 
 @task
@@ -37,12 +43,12 @@ def say_hello():
 with Flow(
     "hello-flow",
     storage=storage.S3(
-        bucket=os.environ["PREFECT_FLOW_STORAGE_BUCKET"],
+        bucket=storage_bucket_output,
     ),
 
     run_config=ECSRun(
         image=os.environ["PREFECT_DASK_WORKER_IMAGE"],
-        labels=json.loads(os.environ["PREFECT_FLOW_LABELS"]),
+        labels=json.loads(os.environ["PREFECT_AGENT_LABELS"]),
         task_definition=definition,
     )
 ) as flow:

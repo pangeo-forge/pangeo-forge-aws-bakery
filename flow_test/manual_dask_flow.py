@@ -7,36 +7,43 @@ from prefect.run_configs import ECSRun
 import yaml
 import boto3
 from prefect.engine.executors import DaskExecutor
-import pandas as pd
+
 
 identifier = os.environ["IDENTIFIER"]
 project = os.environ["PREFECT_PROJECT"]
 worker_image = os.environ["PREFECT_DASK_WORKER_IMAGE"]
-storage_bucket = os.environ["PREFECT_FLOW_STORAGE_BUCKET"]
 
 cloudformation = boto3.resource('cloudformation')
 stack = cloudformation.Stack(f"pangeo-forge-aws-bakery-{identifier}")
+execution_role_output = next((
+    output for output in stack.outputs
+    if output.get("ExportName") == f"prefect-task-execution-role-{identifier}"),
+    None)["OutputValue"]
 
-execution_role_output = next((output for output in stack.outputs 
-    if output["ExportName"] == f"prefect-task-execution-role-{identifier}"),
-        None)["OutputValue"]
+task_role_output = next((
+    output for output in stack.outputs
+    if output.get("ExportName") == f"prefect-task-role-arn-output-{identifier}"),
+    None)["OutputValue"]
 
-task_role_output = next((output for output in stack.outputs 
-    if output["ExportName"] == f"prefect-task-role-arn-output-{identifier}"),
-        None)["OutputValue"]
+cluster_output = next((
+    output for output in stack.outputs
+    if output.get("ExportName") == f"prefect-cluster-arn-output-{identifier}"),
+    None)["OutputValue"]
 
-cluster_output = next((output for output in stack.outputs 
-    if output["ExportName"] == f"prefect-cluster-arn-output-{identifier}"),
-        None)["OutputValue"]
+security_group_output = next((
+    output for output in stack.outputs
+    if output.get("ExportName") == f"prefect-security-group-output-{identifier}"),
+    None)["OutputValue"]
 
-security_group_output = next((output for output in stack.outputs 
-    if output["ExportName"] == f"prefect-security-group-output-{identifier}"),
-        None)["OutputValue"]
+vpc_output = next((
+    output for output in stack.outputs
+    if output.get("ExportName") == f"prefect-vpc-output-{identifier}"),
+    None)["OutputValue"]
 
-vpc_output = next((output for output in stack.outputs 
-    if output["ExportName"] == f"prefect-vpc-output-{identifier}"),
-        None)["OutputValue"]
-
+storage_bucket_output = next((
+    output for output in stack.outputs
+    if output.get("ExportName") == f"prefect-storage-bucket-name-output-{identifier}"),
+    None)["OutputValue"]
 
 definition = yaml.safe_load(
     """
@@ -68,6 +75,8 @@ executor = DaskExecutor(
         "scheduler_timeout": "15 minutes",
     },
 )
+
+
 @task
 def say_hello():
     logger = prefect.context.get("logger")
@@ -78,7 +87,7 @@ def say_hello():
 with Flow(
     "dask-test-flow",
     storage=storage.S3(
-        bucket=storage_bucket
+        bucket=storage_bucket_output
     ),
     run_config=ECSRun(
         image=worker_image,

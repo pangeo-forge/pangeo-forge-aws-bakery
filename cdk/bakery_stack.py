@@ -17,7 +17,6 @@ class BakeryStack(core.Stack):
         self, scope: core.Construct, construct_id: str, identifier: str, **kwargs
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
-
         bucket = aws_s3.Bucket(
             self,
             id=f"flow-storage-bucket-{identifier}",
@@ -51,11 +50,11 @@ class BakeryStack(core.Stack):
         )
         security_group.add_ingress_rule(
             aws_ec2.Peer.any_ipv4(),
-            aws_ec2.Port.tcp_range(8786,8787)
+            aws_ec2.Port.tcp_range(8786, 8787)
         )
         security_group.add_ingress_rule(
             aws_ec2.Peer.any_ipv6(),
-            aws_ec2.Port.tcp_range(8786,8787)
+            aws_ec2.Port.tcp_range(8786, 8787)
         )
         security_group.add_ingress_rule(
             security_group,
@@ -82,7 +81,9 @@ class BakeryStack(core.Stack):
         )
         ecs_task_role.add_to_policy(
             aws_iam.PolicyStatement(
-                resources=[f"arn:aws:logs:{self.region}:{self.account}:log-group:dask-ecs*"],
+                resources=[
+                    f"arn:aws:logs:{self.region}:{self.account}:log-group:dask-ecs*"
+                ],
                 actions=[
                     "logs:GetLogEvents",
                 ],
