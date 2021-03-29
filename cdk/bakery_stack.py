@@ -24,6 +24,12 @@ class BakeryStack(core.Stack):
             auto_delete_objects=True,
             removal_policy=core.RemovalPolicy.DESTROY,
         )
+        cache_bucket = aws_s3.Bucket(
+            self,
+            id=f"flow-cache-bucket-{identifier}",
+            auto_delete_objects=True,
+            removal_policy=core.RemovalPolicy.DESTROY,
+        )
         vpc = aws_ec2.Vpc(
             self,
             id=f"bakery-vpc-{identifier}",
@@ -83,6 +89,7 @@ class BakeryStack(core.Stack):
             )
         )
         bucket.grant_read_write(ecs_task_role)
+        cache_bucket.grant_read_write(ecs_task_role)
 
         ecs_task_role.add_managed_policy(
             aws_iam.ManagedPolicy.from_aws_managed_policy_name(
@@ -165,12 +172,6 @@ class BakeryStack(core.Stack):
             value=ecs_task_role.role_arn,
         )
 
-        #  core.CfnOutput(
-            #  self,
-            #  id=f"prefect-execution-role-arn-output-{identifier}",
-            #  value=prefect_ecs_agent_task_definition.execution_role.role_arn,
-        #  )
-
         core.CfnOutput(
             self,
             id=f"prefect-cluster-arn-output-{identifier}",
@@ -183,6 +184,13 @@ class BakeryStack(core.Stack):
             id=f"prefect-storage-bucket-name-output-{identifier}",
             export_name=f"prefect-storage-bucket-name-output-{identifier}",
             value=bucket.bucket_name,
+        )
+
+        core.CfnOutput(
+            self,
+            id=f"prefect-cache-bucket-name-output-{identifier}",
+            export_name=f"prefect-cache-bucket-name-output-{identifier}",
+            value=cache_bucket.bucket_name,
         )
 
         core.CfnOutput(
