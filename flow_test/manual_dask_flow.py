@@ -5,45 +5,11 @@ import prefect
 from prefect import Flow, storage, task
 from prefect.run_configs import ECSRun
 import yaml
-import boto3
 from prefect.engine.executors import DaskExecutor
+from flow_test.utils import retrieve_stack_outputs
 
-
-identifier = os.environ["IDENTIFIER"]
 project = os.environ["PREFECT_PROJECT"]
 worker_image = os.environ["PREFECT_DASK_WORKER_IMAGE"]
-
-cloudformation = boto3.resource('cloudformation')
-stack = cloudformation.Stack(f"pangeo-forge-aws-bakery-{identifier}")
-execution_role_output = next((
-    output for output in stack.outputs
-    if output.get("ExportName") == f"prefect-task-execution-role-{identifier}"),
-    None)["OutputValue"]
-
-task_role_output = next((
-    output for output in stack.outputs
-    if output.get("ExportName") == f"prefect-task-role-arn-output-{identifier}"),
-    None)["OutputValue"]
-
-cluster_output = next((
-    output for output in stack.outputs
-    if output.get("ExportName") == f"prefect-cluster-arn-output-{identifier}"),
-    None)["OutputValue"]
-
-security_group_output = next((
-    output for output in stack.outputs
-    if output.get("ExportName") == f"prefect-security-group-output-{identifier}"),
-    None)["OutputValue"]
-
-vpc_output = next((
-    output for output in stack.outputs
-    if output.get("ExportName") == f"prefect-vpc-output-{identifier}"),
-    None)["OutputValue"]
-
-storage_bucket_output = next((
-    output for output in stack.outputs
-    if output.get("ExportName") == f"prefect-storage-bucket-name-output-{identifier}"),
-    None)["OutputValue"]
 
 definition = yaml.safe_load(
     """
@@ -54,18 +20,21 @@ definition = yaml.safe_load(
         - name: flow
     """
 )
-definition["executionRoleArn"] = execution_role_output
+
+outputs = retrieve_stack_outputs()
+
+definition["executionRoleArn"] = outputs["task_execution_role"]
 
 executor = DaskExecutor(
     cluster_class="dask_cloudprovider.aws.FargateCluster",
     cluster_kwargs={
-        "image": "552819999234.dkr.ecr.us-west-2.amazonaws.com/pangeo-forge-aws-bakery-worker",
-        "vpc": vpc_output,
-        "cluster_arn": cluster_output,
-        "task_role_arn": task_role_output,
-        "execution_role_arn": execution_role_output,
+        "image": worker_image,
+        "vpc": outputs["vpc_output"],
+        "cluster_arn": outputs["cluster_arn_output"],
+        "task_role_arn": outputs["task_role_arn_output"],
+        "execution_role_arn": outputs["task_execution_role"],
         "security_groups": [
-            security_group_output
+            outputs["security_group_output"]
         ],
         "n_workers": 1,
         "scheduler_cpu": 256,
@@ -87,7 +56,7 @@ def say_hello():
 with Flow(
     "dask-test-flow",
     storage=storage.S3(
-        bucket=storage_bucket_output
+        bucket=outputs["storage_bucket_name_output"]
     ),
     run_config=ECSRun(
         image=worker_image,

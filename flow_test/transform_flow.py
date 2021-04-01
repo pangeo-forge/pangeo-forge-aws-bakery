@@ -1,7 +1,6 @@
 import os
 import yaml
 import json
-import boto3
 import pandas as pd
 from flow_test.transform_tasks.http import download
 from flow_test.transform_tasks.xarray import combine_and_write, chunk
@@ -9,46 +8,10 @@ from flow_test.transform_tasks.zarr import consolidate_metadata
 from prefect import Flow, Parameter, task, unmapped, storage
 from prefect.run_configs import ECSRun
 from prefect.engine.executors import DaskExecutor
+from flow_test.utils import retrieve_stack_outputs
 
-identifier = os.environ["IDENTIFIER"]
 project = os.environ["PREFECT_PROJECT"]
 worker_image = os.environ["PREFECT_DASK_WORKER_IMAGE"]
-cloudformation = boto3.resource('cloudformation')
-stack = cloudformation.Stack(f"pangeo-forge-aws-bakery-{identifier}")
-execution_role_output = next((
-    output for output in stack.outputs
-    if output.get("ExportName") == f"prefect-task-execution-role-{identifier}"),
-    None)["OutputValue"]
-
-task_role_output = next((
-    output for output in stack.outputs
-    if output.get("ExportName") == f"prefect-task-role-arn-output-{identifier}"),
-    None)["OutputValue"]
-
-cluster_output = next((
-    output for output in stack.outputs
-    if output.get("ExportName") == f"prefect-cluster-arn-output-{identifier}"),
-    None)["OutputValue"]
-
-security_group_output = next((
-    output for output in stack.outputs
-    if output.get("ExportName") == f"prefect-security-group-output-{identifier}"),
-    None)["OutputValue"]
-
-vpc_output = next((
-    output for output in stack.outputs
-    if output.get("ExportName") == f"prefect-vpc-output-{identifier}"),
-    None)["OutputValue"]
-
-cache_bucket_output = next((
-    output for output in stack.outputs
-    if output.get("ExportName") == f"prefect-cache-bucket-name-output-{identifier}"),
-    None)["OutputValue"]
-
-storage_bucket_output = next((
-    output for output in stack.outputs
-    if output.get("ExportName") == f"prefect-storage-bucket-name-output-{identifier}"),
-    None)["OutputValue"]
 
 definition = yaml.safe_load(
     """
@@ -59,20 +22,23 @@ definition = yaml.safe_load(
         - name: flow
     """
 )
-definition["executionRoleArn"] = execution_role_output
+
+outputs = retrieve_stack_outputs()
+
+definition["executionRoleArn"] = outputs["task_execution_role"]
 
 executor = DaskExecutor(
     cluster_class="dask_cloudprovider.aws.FargateCluster",
     cluster_kwargs={
-        "image": "552819999234.dkr.ecr.us-west-2.amazonaws.com/pangeo-forge-aws-bakery-worker",
-        "vpc": vpc_output,
-        "cluster_arn": cluster_output,
-        "task_role_arn": task_role_output,
-        "execution_role_arn": execution_role_output,
+        "image": worker_image,
+        "vpc": outputs["vpc_output"],
+        "cluster_arn": outputs["cluster_arn_output"],
+        "task_role_arn": outputs["task_role_arn_output"],
+        "execution_role_arn": outputs["task_execution_role"],
         "security_groups": [
-            security_group_output
+            outputs["security_group_output"]
         ],
-        "n_workers": 2,
+        "n_workers": 1,
         "scheduler_cpu": 256,
         "scheduler_mem": 512,
         "worker_cpu": 1024,
@@ -99,7 +65,7 @@ def source_url(day: str) -> str:
 with Flow(
     "dask-transform-flow",
     storage=storage.S3(
-        bucket=storage_bucket_output
+        bucket=outputs["storage_bucket_name_output"]
     ),
     run_config=ECSRun(
         image=worker_image,
@@ -129,14 +95,15 @@ with Flow(
     # be wrapepd in `prefect.unmapped`.
     # https://docs.prefect.io/core/concepts/mapping.html#unmapped-inputs
     # nc_sources will be a list of cached URLs, one per input day.
+    zarr_output = "dask_transform_flow.zarr"
     nc_sources = download.map(
         sources,
         cache_location=unmapped(
-            f"s3://{cache_bucket_output}/cache/dask_transform_flow.zarr"
+            f"s3://{outputs['cache_bucket_name_output']}/cache/{zarr_output}"
         )
     )
     chunked = chunk(nc_sources, size=5)
-    target = f"s3://{cache_bucket_output}/target/dask_transform_flow.zarr"
+    target = f"s3://{outputs['cache_bucket_name_output']}/target/{zarr_output}"
     writes = combine_and_write.map(
         chunked,
         unmapped(target),
