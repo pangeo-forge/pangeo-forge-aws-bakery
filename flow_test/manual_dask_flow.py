@@ -6,10 +6,11 @@ from prefect import Flow, storage, task
 from prefect.run_configs import ECSRun
 import yaml
 from prefect.engine.executors import DaskExecutor
-from flow_test.utils import retrieve_stack_outputs
+from flow_test.utils import retrieve_stack_outputs, generate_tags
 
 project = os.environ["PREFECT_PROJECT"]
 worker_image = os.environ["PREFECT_DASK_WORKER_IMAGE"]
+flow_name = "dask-test-flow"
 
 definition = yaml.safe_load(
     """
@@ -22,6 +23,8 @@ definition = yaml.safe_load(
 )
 
 outputs = retrieve_stack_outputs()
+tags = generate_tags(flow_name)
+
 
 definition["executionRoleArn"] = outputs["task_execution_role"]
 
@@ -42,6 +45,7 @@ executor = DaskExecutor(
         "worker_cpu": 1024,
         "worker_mem": 2048,
         "scheduler_timeout": "15 minutes",
+        "tags": tags["tag_dict"]
     },
 )
 
@@ -54,7 +58,7 @@ def say_hello():
 
 
 with Flow(
-    "dask-test-flow",
+    flow_name,
     storage=storage.S3(
         bucket=outputs["storage_bucket_name_output"]
     ),
@@ -62,6 +66,7 @@ with Flow(
         image=worker_image,
         labels=json.loads(os.environ["PREFECT_AGENT_LABELS"]),
         task_definition=definition,
+        run_task_kwargs={"tags": tags["tag_list"]},
     ),
     executor=executor,
 ) as flow:

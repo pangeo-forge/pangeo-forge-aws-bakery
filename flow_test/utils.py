@@ -13,3 +13,23 @@ def retrieve_stack_outputs():
         for output in stack.outputs
     }
     return outputs
+
+
+def generate_tags(flow_name):
+    tags = stack.tags
+    tags.append({
+        "Key": "Flow",
+        "Value": flow_name
+    })
+    lowercase_tags = [
+        {k.lower(): v for k, v in tag.items()}
+        for tag in tags
+    ]
+    tag_dict = {
+        tag.get("Key"): tag.get("Value")
+        for tag in tags
+    }
+    return {
+        "tag_list": lowercase_tags,
+        "tag_dict": tag_dict
+    }
