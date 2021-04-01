@@ -18,6 +18,12 @@ black = "==20.8b1"
 flake8 = "==3.8.4"
 isort = "==5.7.0"
 prefect = "==0.14.13"
+botocore = "==1.19.52"
+dask-cloudprovider = {version = "==2021.3.1", extras = ["aws"]}
+boto3 = "==1.16.52"
+xarray = "*"
+zarr = "*"
+pangeo-forge = {git = "https://github.com/pangeo-forge/pangeo-forge.git" }
 
 [requires]
 python_version = "3.8"
