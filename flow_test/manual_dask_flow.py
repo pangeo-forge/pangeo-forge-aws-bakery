@@ -37,16 +37,14 @@ executor = DaskExecutor(
         "cluster_arn": outputs["cluster_arn_output"],
         "task_role_arn": outputs["task_role_arn_output"],
         "execution_role_arn": outputs["task_execution_role"],
-        "security_groups": [
-            outputs["security_group_output"]
-        ],
+        "security_groups": [outputs["security_group_output"]],
         "n_workers": 1,
         "scheduler_cpu": 256,
         "scheduler_mem": 512,
         "worker_cpu": 1024,
         "worker_mem": 2048,
         "scheduler_timeout": "15 minutes",
-        "tags": tags["tag_dict"]
+        "tags": tags["tag_dict"],
     },
 )
 
@@ -60,9 +58,7 @@ def say_hello():
 
 with Flow(
     flow_name,
-    storage=storage.S3(
-        bucket=outputs["storage_bucket_name_output"]
-    ),
+    storage=storage.S3(bucket=outputs["storage_bucket_name_output"]),
     run_config=ECSRun(
         image=worker_image,
         labels=json.loads(os.environ["PREFECT_AGENT_LABELS"]),

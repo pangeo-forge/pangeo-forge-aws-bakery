@@ -39,16 +39,14 @@ executor = DaskExecutor(
         "cluster_arn": outputs["cluster_arn_output"],
         "task_role_arn": outputs["task_role_arn_output"],
         "execution_role_arn": outputs["task_execution_role"],
-        "security_groups": [
-            outputs["security_group_output"]
-        ],
+        "security_groups": [outputs["security_group_output"]],
         "n_workers": 1,
         "scheduler_cpu": 256,
         "scheduler_mem": 512,
         "worker_cpu": 1024,
         "worker_mem": 2048,
         "scheduler_timeout": "15 minutes",
-        "tags": tags["tag_dict"]
+        "tags": tags["tag_dict"],
     },
 )
 
@@ -69,9 +67,7 @@ def source_url(day: str) -> str:
 
 with Flow(
     flow_name,
-    storage=storage.S3(
-        bucket=outputs["storage_bucket_name_output"]
-    ),
+    storage=storage.S3(bucket=outputs["storage_bucket_name_output"]),
     run_config=ECSRun(
         image=worker_image,
         labels=json.loads(os.environ["PREFECT_AGENT_LABELS"]),
@@ -83,11 +79,9 @@ with Flow(
     days = Parameter(
         # All parameters have a "name" and should have a default value.
         "days",
-        default=pd.date_range(
-            "1981-09-01",
-            "1981-09-10",
-            freq="D"
-        ).strftime("%Y-%m-%d").tolist(),
+        default=pd.date_range("1981-09-01", "1981-09-10", freq="D")
+        .strftime("%Y-%m-%d")
+        .tolist(),
     )
     # Use map the `source_url` task to each day. This returns a mapped output,
     # a list of string URLS. See
@@ -106,7 +100,7 @@ with Flow(
         sources,
         cache_location=unmapped(
             f"s3://{outputs['cache_bucket_name_output']}/cache/{zarr_output}"
-        )
+        ),
     )
     chunked = chunk(nc_sources, size=5)
     target = f"s3://{outputs['cache_bucket_name_output']}/target/{zarr_output}"
