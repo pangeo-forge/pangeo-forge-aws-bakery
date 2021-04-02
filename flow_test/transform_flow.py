@@ -1,14 +1,16 @@
-import os
-import yaml
 import json
+import os
+
 import pandas as pd
-from flow_test.transform_tasks.http import download
-from flow_test.transform_tasks.xarray import combine_and_write, chunk
-from flow_test.transform_tasks.zarr import consolidate_metadata
-from prefect import Flow, Parameter, task, unmapped, storage
-from prefect.run_configs import ECSRun
+import yaml
+from prefect import Flow, Parameter, storage, task, unmapped
 from prefect.engine.executors import DaskExecutor
-from flow_test.utils import retrieve_stack_outputs, generate_tags
+from prefect.run_configs import ECSRun
+
+from flow_test.transform_tasks.http import download
+from flow_test.transform_tasks.xarray import chunk, combine_and_write
+from flow_test.transform_tasks.zarr import consolidate_metadata
+from flow_test.utils import generate_tags, retrieve_stack_outputs
 
 project = os.environ["PREFECT_PROJECT"]
 worker_image = os.environ["PREFECT_DASK_WORKER_IMAGE"]

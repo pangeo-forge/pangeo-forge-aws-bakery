@@ -2,11 +2,12 @@ import json
 import os
 
 import prefect
-from prefect import Flow, storage, task
-from prefect.run_configs import ECSRun
 import yaml
+from prefect import Flow, storage, task
 from prefect.engine.executors import DaskExecutor
-from flow_test.utils import retrieve_stack_outputs, generate_tags
+from prefect.run_configs import ECSRun
+
+from flow_test.utils import generate_tags, retrieve_stack_outputs
 
 project = os.environ["PREFECT_PROJECT"]
 worker_image = os.environ["PREFECT_DASK_WORKER_IMAGE"]

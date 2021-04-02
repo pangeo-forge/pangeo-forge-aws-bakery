@@ -2,9 +2,9 @@ import os
 
 from aws_cdk import (
     aws_ec2,
+    aws_ecr,
     aws_ecs,
     aws_ecs_patterns,
-    aws_ecr,
     aws_iam,
     aws_s3,
     aws_secretsmanager,
@@ -49,17 +49,12 @@ class BakeryStack(core.Stack):
             vpc=vpc,
         )
         security_group.add_ingress_rule(
-            aws_ec2.Peer.any_ipv4(),
-            aws_ec2.Port.tcp_range(8786, 8787)
+            aws_ec2.Peer.any_ipv4(), aws_ec2.Port.tcp_range(8786, 8787)
         )
         security_group.add_ingress_rule(
-            aws_ec2.Peer.any_ipv6(),
-            aws_ec2.Port.tcp_range(8786, 8787)
+            aws_ec2.Peer.any_ipv6(), aws_ec2.Port.tcp_range(8786, 8787)
         )
-        security_group.add_ingress_rule(
-            security_group,
-            aws_ec2.Port.all_tcp()
-        )
+        security_group.add_ingress_rule(security_group, aws_ec2.Port.all_tcp())
         cluster = aws_ecs.Cluster(
             self,
             id=f"bakery-cluster-{identifier}",
@@ -121,7 +116,7 @@ class BakeryStack(core.Stack):
                 aws_ecr.Repository.from_repository_name(
                     self,
                     id=f"pangeo-forge-aws-bakery-agent-repo-{identifier}",
-                    repository_name="pangeo-forge-aws-bakery-agent"
+                    repository_name="pangeo-forge-aws-bakery-agent",
                 )
             ),
             port_mappings=[aws_ecs.PortMapping(container_port=8080, host_port=8080)],
@@ -134,7 +129,7 @@ class BakeryStack(core.Stack):
                 "--cluster",
                 cluster.cluster_arn,
                 "--task-role-arn",
-                ecs_task_role.role_arn
+                ecs_task_role.role_arn,
             ],
         )
 

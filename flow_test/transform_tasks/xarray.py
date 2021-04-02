@@ -2,8 +2,8 @@ from typing import Any, List, Tuple
 
 import fsspec
 import xarray as xr
-from prefect import task
 from pangeo_forge import utils
+from prefect import task
 
 
 @task

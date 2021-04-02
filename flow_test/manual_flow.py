@@ -2,10 +2,11 @@ import json
 import os
 
 import prefect
+import yaml
 from prefect import Flow, storage, task
 from prefect.run_configs import ECSRun
-import yaml
-from flow_test.utils import retrieve_stack_outputs, generate_tags
+
+from flow_test.utils import generate_tags, retrieve_stack_outputs
 
 project = os.environ["PREFECT_PROJECT"]
 outputs = retrieve_stack_outputs()
