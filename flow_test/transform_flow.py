@@ -4,7 +4,7 @@ import os
 import pandas as pd
 import yaml
 from prefect import Flow, Parameter, storage, task, unmapped
-from prefect.engine.executors import DaskExecutor
+from prefect.executors import DaskExecutor
 from prefect.run_configs import ECSRun
 
 from flow_test.transform_tasks.http import download
@@ -53,9 +53,6 @@ executor = DaskExecutor(
 
 @task
 def source_url(day: str) -> str:
-    """
-    Format the URL for a specific day.
-    """
     day = pd.Timestamp(day)
     source_url_pattern = (
         "https://www.ncei.noaa.gov/data/"
@@ -77,24 +74,12 @@ with Flow(
     executor=executor,
 ) as flow:
     days = Parameter(
-        # All parameters have a "name" and should have a default value.
         "days",
         default=pd.date_range("1981-09-01", "1981-09-10", freq="D")
         .strftime("%Y-%m-%d")
         .tolist(),
     )
-    # Use map the `source_url` task to each day. This returns a mapped output,
-    # a list of string URLS. See
-    # https://docs.prefect.io/core/concepts/mapping.html#prefect-approach
-    # for more. We'll have one output URL per day.
     sources = source_url.map(days)
-    # Map the `download` task (provided by prefect) to download the raw data
-    # into a cache.
-    # Mapped outputs (sources) can be fed straight into another Task.map call.
-    # If an input is just a regular argument that's not a mapping, it must
-    # be wrapepd in `prefect.unmapped`.
-    # https://docs.prefect.io/core/concepts/mapping.html#unmapped-inputs
-    # nc_sources will be a list of cached URLs, one per input day.
     zarr_output = "dask_transform_flow.zarr"
     nc_sources = download.map(
         sources,
@@ -111,7 +96,6 @@ with Flow(
         concat_dim=unmapped("time"),
     )
 
-    # Consolidate the metadata for the final dataset.
     consolidate_metadata(target, writes=writes)
 
 flow.register(project_name=project)

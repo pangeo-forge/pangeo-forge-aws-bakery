@@ -4,7 +4,7 @@ import os
 import prefect
 import yaml
 from prefect import Flow, storage, task
-from prefect.engine.executors import DaskExecutor
+from prefect.executors import DaskExecutor
 from prefect.run_configs import ECSRun
 
 from flow_test.utils import generate_tags, retrieve_stack_outputs
