@@ -49,6 +49,9 @@ IDENTIFIER="<a unique value to tie to your deployment>"
 AWS_DEFAULT_REGION="<the AWS region you're deploying to>"
 AWS_DEFAULT_PROFILE="<your named AWS CLI Profile to use for deployment>"
 RUNNER_TOKEN_SECRET_ARN="<ARN of your Runner Token Secret>" # This is outlined in Deployment - Standard Deployments
+PREFECT__CLOUD__AUTH_TOKEN="<A valid Prefect [Tenant token](https://docs.prefect.io/orchestration/concepts/tokens.html#tenant)> to support flow registration"
+PREFECT_PROJECT="<An existing Prefect [Project](https://docs.prefect.io/orchestration/concepts/projects.html#creating-a-project) where the bakery's test flows will be registered>"
+PREFECT_AGENT_LABELS="<A set of Prefect Agent [Labels](https://docs.prefect.io/orchestration/agents/overview.html#labels) which will be registered with the deployed agent to limit which flows should be executed by the agent>"
 ```
 
 An example that you can modify and rename to `.env` is provided: `example.env`
