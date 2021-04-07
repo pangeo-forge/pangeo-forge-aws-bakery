@@ -29,7 +29,7 @@ definition = yaml.safe_load(
 outputs = retrieve_stack_outputs()
 tags = generate_tags(flow_name)
 
-definition["executionRoleArn"] = outputs["task_execution_role"]
+definition["executionRoleArn"] = outputs["task_execution_role_arn_output"]
 
 executor = DaskExecutor(
     cluster_class="dask_cloudprovider.aws.FargateCluster",
@@ -38,7 +38,7 @@ executor = DaskExecutor(
         "vpc": outputs["vpc_output"],
         "cluster_arn": outputs["cluster_arn_output"],
         "task_role_arn": outputs["task_role_arn_output"],
-        "execution_role_arn": outputs["task_execution_role"],
+        "execution_role_arn": outputs["task_execution_role_arn_output"],
         "security_groups": [outputs["security_group_output"]],
         "n_workers": 1,
         "scheduler_cpu": 256,

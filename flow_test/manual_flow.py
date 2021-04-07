@@ -23,7 +23,7 @@ definition = yaml.safe_load(
 )
 
 tags = generate_tags(flow_name)
-definition["executionRoleArn"] = outputs["task_execution_role"]
+definition["executionRoleArn"] = outputs["task_execution_role_arn_output"]
 
 
 @task

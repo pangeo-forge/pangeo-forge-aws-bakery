@@ -45,7 +45,7 @@ class BakeryStack(core.Stack):
         )
         security_group = aws_ec2.SecurityGroup(
             self,
-            id="security-group-{identifier}",
+            id=f"security-group-{identifier}",
             vpc=vpc,
         )
         security_group.add_ingress_rule(
@@ -152,7 +152,7 @@ class BakeryStack(core.Stack):
 
         ecs_task_execution_role = aws_iam.Role(
             self,
-            "taskExecutionRole",
+            id=f"prefect-ecs-task-execution-role-{identifier}",
             assumed_by=aws_iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
             managed_policies=[
                 aws_iam.ManagedPolicy.from_aws_managed_policy_name(
@@ -191,8 +191,8 @@ class BakeryStack(core.Stack):
 
         core.CfnOutput(
             self,
-            id=f"prefect-task-execution-role-{identifier}",
-            export_name=f"prefect-task-execution-role-{identifier}",
+            id=f"prefect-task-execution-role-arn-output-{identifier}",
+            export_name=f"prefect-task-execution-role-arn-output-{identifier}",
             value=ecs_task_execution_role.role_arn,
         )
 
