@@ -7,15 +7,14 @@ install:
 install-dev:
 	npm install
 	pipenv install --dev
+	pipenv run pre-commit install
 
 lint:
-	pipenv run flake8 cdk/ flow_test/
-	pipenv run isort --check-only --profile black cdk/ flow_test/
-	pipenv run black --check --diff cdk/ flow_test/
+	pipenv run pre-commit run --all-files
 
 format:
 	pipenv run isort --profile black cdk/ flow_test/
-	pipenv run black cdk/ flow_test/
+	pipenv run black cdk/ flow_test/ --line-length 100
 
 diff:
 	pipenv run npx cdk diff --app cdk/app.py || true

@@ -24,6 +24,8 @@ boto3 = "==1.16.52"
 xarray = "== 0.17.0"
 zarr = "==2.7.0"
 pangeo-forge = {git = "https://github.com/pangeo-forge/pangeo-forge.git" }
+pre-commit = "==2.10.0"
+pre-commit-hooks = "==3.4.0"
 
 [requires]
 python_version = "3.8"
