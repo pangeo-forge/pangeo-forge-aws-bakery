@@ -13,9 +13,7 @@ from aws_cdk import (
 
 
 class BakeryStack(core.Stack):
-    def __init__(
-        self, scope: core.Construct, construct_id: str, identifier: str, **kwargs
-    ) -> None:
+    def __init__(self, scope: core.Construct, construct_id: str, identifier: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
         bucket = aws_s3.Bucket(
             self,
@@ -48,12 +46,8 @@ class BakeryStack(core.Stack):
             id=f"security-group-{identifier}",
             vpc=vpc,
         )
-        security_group.add_ingress_rule(
-            aws_ec2.Peer.any_ipv4(), aws_ec2.Port.tcp_range(8786, 8787)
-        )
-        security_group.add_ingress_rule(
-            aws_ec2.Peer.any_ipv6(), aws_ec2.Port.tcp_range(8786, 8787)
-        )
+        security_group.add_ingress_rule(aws_ec2.Peer.any_ipv4(), aws_ec2.Port.tcp_range(8786, 8787))
+        security_group.add_ingress_rule(aws_ec2.Peer.any_ipv6(), aws_ec2.Port.tcp_range(8786, 8787))
         security_group.add_ingress_rule(security_group, aws_ec2.Port.all_tcp())
         cluster = aws_ecs.Cluster(
             self,
@@ -76,9 +70,7 @@ class BakeryStack(core.Stack):
         )
         ecs_task_role.add_to_policy(
             aws_iam.PolicyStatement(
-                resources=[
-                    f"arn:aws:logs:{self.region}:{self.account}:log-group:dask-ecs*"
-                ],
+                resources=[f"arn:aws:logs:{self.region}:{self.account}:log-group:dask-ecs*"],
                 actions=[
                     "logs:GetLogEvents",
                 ],
@@ -121,9 +113,7 @@ class BakeryStack(core.Stack):
             ),
             port_mappings=[aws_ecs.PortMapping(container_port=8080, host_port=8080)],
             logging=aws_ecs.LogDriver.aws_logs(stream_prefix="ecs-agent"),
-            environment={
-                "PREFECT__CLOUD__AGENT__LABELS": os.environ["PREFECT_AGENT_LABELS"]
-            },
+            environment={"PREFECT__CLOUD__AGENT__LABELS": os.environ["PREFECT_AGENT_LABELS"]},
             secrets={"PREFECT__CLOUD__AGENT__AUTH_TOKEN": runner_token_secret},
             command=[
                 "--cluster",
@@ -133,17 +123,15 @@ class BakeryStack(core.Stack):
             ],
         )
 
-        prefect_ecs_agent_service = (
-            aws_ecs_patterns.ApplicationLoadBalancedFargateService(
-                self,
-                id=f"prefect-ecs-agent-service-{identifier}",
-                assign_public_ip=True,
-                platform_version=aws_ecs.FargatePlatformVersion.LATEST,
-                desired_count=1,
-                task_definition=prefect_ecs_agent_task_definition,
-                cluster=cluster,
-                propagate_tags=aws_ecs.PropagatedTagSource.SERVICE,
-            )
+        prefect_ecs_agent_service = aws_ecs_patterns.ApplicationLoadBalancedFargateService(
+            self,
+            id=f"prefect-ecs-agent-service-{identifier}",
+            assign_public_ip=True,
+            platform_version=aws_ecs.FargatePlatformVersion.LATEST,
+            desired_count=1,
+            task_definition=prefect_ecs_agent_task_definition,
+            cluster=cluster,
+            propagate_tags=aws_ecs.PropagatedTagSource.SERVICE,
         )
 
         prefect_ecs_agent_service.target_group.configure_health_check(

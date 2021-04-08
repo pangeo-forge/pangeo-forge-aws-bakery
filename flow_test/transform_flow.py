@@ -75,17 +75,13 @@ with Flow(
 ) as flow:
     days = Parameter(
         "days",
-        default=pd.date_range("1981-09-01", "1981-09-10", freq="D")
-        .strftime("%Y-%m-%d")
-        .tolist(),
+        default=pd.date_range("1981-09-01", "1981-09-10", freq="D").strftime("%Y-%m-%d").tolist(),
     )
     sources = source_url.map(days)
     zarr_output = "dask_transform_flow.zarr"
     nc_sources = download.map(
         sources,
-        cache_location=unmapped(
-            f"s3://{outputs['cache_bucket_name_output']}/cache/{zarr_output}"
-        ),
+        cache_location=unmapped(f"s3://{outputs['cache_bucket_name_output']}/cache/{zarr_output}"),
     )
     chunked = chunk(nc_sources, size=5)
     target = f"s3://{outputs['cache_bucket_name_output']}/target/{zarr_output}"
