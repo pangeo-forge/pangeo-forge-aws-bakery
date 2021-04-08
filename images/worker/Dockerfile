@@ -1,5 +1,5 @@
 FROM python:3.8-buster
-RUN pip install dask-cloudprovider[aws]==2021.3.1 
+RUN pip install dask-cloudprovider[aws]==2021.3.1
 RUN pip install prefect[aws]==0.14.13
 RUN pip install xarray
 RUN pip install zarr
