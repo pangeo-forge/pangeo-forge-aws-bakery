@@ -26,6 +26,7 @@ definition = yaml.safe_load(
 outputs = retrieve_stack_outputs()
 tags = generate_tags(flow_name)
 
+subnets = [v for k, v in outputs.items() if k and k.startswith("public_subnet")]
 
 definition["executionRoleArn"] = outputs["task_execution_role_arn_output"]
 
@@ -37,7 +38,7 @@ executor = DaskExecutor(
         "cluster_arn": outputs["cluster_arn_output"],
         "task_role_arn": outputs["task_role_arn_output"],
         "execution_role_arn": outputs["task_execution_role_arn_output"],
-        "security_groups": [outputs["security_group_output"]],
+        "security_groups": [outputs["dask_security_group_output"]],
         "n_workers": 1,
         "scheduler_cpu": 256,
         "scheduler_mem": 512,
@@ -63,7 +64,16 @@ with Flow(
         image=worker_image,
         labels=json.loads(os.environ["PREFECT_AGENT_LABELS"]),
         task_definition=definition,
-        run_task_kwargs={"tags": tags["tag_list"]},
+        run_task_kwargs={
+            "tags": tags["tag_list"],
+            "networkConfiguration": {
+                "awsvpcConfiguration": {
+                    "subnets": subnets,
+                    "securityGroups": [outputs["prefect_security_group_output"]],
+                    "assignPublicIp": "ENABLED",
+                }
+            },
+        },
     ),
     executor=executor,
 ) as flow:

@@ -15,18 +15,21 @@ from aws_cdk import (
 class BakeryStack(core.Stack):
     def __init__(self, scope: core.Construct, construct_id: str, identifier: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
+
         bucket = aws_s3.Bucket(
             self,
             id=f"flow-storage-bucket-{identifier}",
             auto_delete_objects=True,
             removal_policy=core.RemovalPolicy.DESTROY,
         )
+
         cache_bucket = aws_s3.Bucket(
             self,
             id=f"flow-cache-bucket-{identifier}",
             auto_delete_objects=True,
             removal_policy=core.RemovalPolicy.DESTROY,
         )
+
         vpc = aws_ec2.Vpc(
             self,
             id=f"bakery-vpc-{identifier}",
@@ -36,19 +39,29 @@ class BakeryStack(core.Stack):
             nat_gateways=0,
             subnet_configuration=[
                 aws_ec2.SubnetConfiguration(
-                    name="PublicSubnet1", subnet_type=aws_ec2.SubnetType.PUBLIC
+                    name="PublicSubnetConfig1", subnet_type=aws_ec2.SubnetType.PUBLIC
                 )
             ],
             max_azs=3,
         )
-        security_group = aws_ec2.SecurityGroup(
+
+        prefect_security_group = aws_ec2.SecurityGroup(
             self,
-            id=f"security-group-{identifier}",
+            id=f"prefect-security-group-{identifier}",
             vpc=vpc,
+            allow_all_outbound=True,
         )
-        security_group.add_ingress_rule(aws_ec2.Peer.any_ipv4(), aws_ec2.Port.tcp_range(8786, 8787))
-        security_group.add_ingress_rule(aws_ec2.Peer.any_ipv6(), aws_ec2.Port.tcp_range(8786, 8787))
-        security_group.add_ingress_rule(security_group, aws_ec2.Port.all_tcp())
+
+        prefect_security_group.add_ingress_rule(prefect_security_group, aws_ec2.Port.all_traffic())
+
+        dask_security_group = aws_ec2.SecurityGroup(
+            self, id=f"dask-security-group-{identifier}", vpc=vpc, allow_all_outbound=True
+        )
+
+        dask_security_group.add_ingress_rule(dask_security_group, aws_ec2.Port.all_traffic())
+
+        dask_security_group.add_ingress_rule(prefect_security_group, aws_ec2.Port.all_traffic())
+
         cluster = aws_ecs.Cluster(
             self,
             id=f"bakery-cluster-{identifier}",
@@ -60,6 +73,7 @@ class BakeryStack(core.Stack):
             id=f"prefect-ecs-task-role-{identifier}",
             assumed_by=aws_iam.ServicePrincipal(service="ecs-tasks.amazonaws.com"),
         )
+
         ecs_task_role.add_to_policy(
             aws_iam.PolicyStatement(
                 resources=["*"],
@@ -68,6 +82,7 @@ class BakeryStack(core.Stack):
                 ],
             )
         )
+
         ecs_task_role.add_to_policy(
             aws_iam.PolicyStatement(
                 resources=[f"arn:aws:logs:{self.region}:{self.account}:log-group:dask-ecs*"],
@@ -76,7 +91,9 @@ class BakeryStack(core.Stack):
                 ],
             )
         )
+
         bucket.grant_read_write(ecs_task_role)
+
         cache_bucket.grant_read_write(ecs_task_role)
 
         ecs_task_role.add_managed_policy(
@@ -132,6 +149,7 @@ class BakeryStack(core.Stack):
             task_definition=prefect_ecs_agent_task_definition,
             cluster=cluster,
             propagate_tags=aws_ecs.PropagatedTagSource.SERVICE,
+            security_groups=[prefect_security_group],
         )
 
         prefect_ecs_agent_service.target_group.configure_health_check(
@@ -186,9 +204,16 @@ class BakeryStack(core.Stack):
 
         core.CfnOutput(
             self,
+            id=f"dask-security-group-output-{identifier}",
+            export_name=f"prefect-dask-security-group-output-{identifier}",
+            value=dask_security_group.security_group_id,
+        )
+
+        core.CfnOutput(
+            self,
             id=f"prefect-security-group-output-{identifier}",
-            export_name=f"prefect-security-group-output-{identifier}",
-            value=security_group.security_group_id,
+            export_name=f"prefect-prefect-security-group-output-{identifier}",
+            value=prefect_security_group.security_group_id,
         )
 
         core.CfnOutput(
@@ -197,3 +222,11 @@ class BakeryStack(core.Stack):
             export_name=f"prefect-vpc-output-{identifier}",
             value=vpc.vpc_id,
         )
+
+        for idx, public_subnet in enumerate(vpc.public_subnets):
+            core.CfnOutput(
+                self,
+                id=f"prefect-public-subnet-{idx}-output-{identifier}",
+                export_name=f"prefect-public-subnet-{idx}-output-{identifier}",
+                value=public_subnet.subnet_id,
+            )
