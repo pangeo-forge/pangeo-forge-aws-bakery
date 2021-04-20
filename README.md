@@ -2,6 +2,8 @@
 
 This repository serves as the provider of an AWS CDK Application which deploys the necessary infrastructure to provide a `pangeo-forge` Bakery on AWS
 
+![pangeo-forge-aws-bakery architecture diagram](./diagrams/pangeo-forge-aws-bakery.png)
+
 # Contents
 
 * [🧑‍💻 Development - Requirements](#requirements)
