@@ -52,7 +52,9 @@ RUNNER_TOKEN_SECRET_ARN="<ARN of your Runner Token Secret>" # This is outlined i
 PREFECT__CLOUD__AUTH_TOKEN="<A valid Prefect [Tenant token](https://docs.prefect.io/orchestration/concepts/tokens.html#tenant)> to support flow registration"
 PREFECT_PROJECT="<An existing Prefect [Project](https://docs.prefect.io/orchestration/concepts/projects.html#creating-a-project) where the bakery's test flows will be registered>"
 PREFECT_AGENT_LABELS="<A set of Prefect Agent [Labels](https://docs.prefect.io/orchestration/agents/overview.html#labels) which will be registered with the deployed agent to limit which flows should be executed by the agent>"
+BUCKET_USER_ARN="The manually created user whose credentials will be shared via bakeries.yaml"
 ```
+
 
 An example that you can modify and rename to `.env` is provided: `example.env`
 

@@ -13,7 +13,9 @@ from aws_cdk import (
 
 
 class BakeryStack(core.Stack):
-    def __init__(self, scope: core.Construct, construct_id: str, identifier: str, **kwargs) -> None:
+    def __init__(
+        self, scope: core.Construct, construct_id: str, identifier: str, user_arn: str, **kwargs
+    ) -> None:
         super().__init__(scope, construct_id, **kwargs)
         bucket = aws_s3.Bucket(
             self,
@@ -78,6 +80,30 @@ class BakeryStack(core.Stack):
         )
         bucket.grant_read_write(ecs_task_role)
         cache_bucket.grant_read_write(ecs_task_role)
+
+        bucket_user = aws_iam.User.from_user_arn(
+            self,
+            id=f"prefect-bucket-user-{identifier}",
+            user_arn=user_arn,
+        )
+
+        cache_bucket.add_to_resource_policy(
+            aws_iam.PolicyStatement(
+                effect=aws_iam.Effect.ALLOW,
+                actions=["s3:*Object"],
+                resources=[f"{cache_bucket.bucket_arn}/*"],
+                principals=[bucket_user],
+            )
+        )
+
+        cache_bucket.add_to_resource_policy(
+            aws_iam.PolicyStatement(
+                effect=aws_iam.Effect.ALLOW,
+                actions=["s3:ListBucket"],
+                resources=[cache_bucket.bucket_arn],
+                principals=[bucket_user],
+            )
+        )
 
         ecs_task_role.add_managed_policy(
             aws_iam.ManagedPolicy.from_aws_managed_policy_name(

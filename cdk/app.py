@@ -7,11 +7,13 @@ from bakery_stack import BakeryStack
 app = core.App()
 
 identifier = os.environ["IDENTIFIER"]
+user_arn = os.environ["BUCKET_USER_ARN"]
 
 BakeryStack(
     scope=app,
     construct_id=f"pangeo-forge-aws-bakery-{identifier}",
     identifier=identifier,
+    user_arn=user_arn,
 )
 
 for k, v in {
