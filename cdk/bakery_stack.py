@@ -105,6 +105,24 @@ class BakeryStack(core.Stack):
             )
         )
 
+        bucket.add_to_resource_policy(
+            aws_iam.PolicyStatement(
+                effect=aws_iam.Effect.ALLOW,
+                actions=["s3:*Object"],
+                resources=[f"{bucket.bucket_arn}/*"],
+                principals=[bucket_user],
+            )
+        )
+
+        bucket.add_to_resource_policy(
+            aws_iam.PolicyStatement(
+                effect=aws_iam.Effect.ALLOW,
+                actions=["s3:ListBucket"],
+                resources=[bucket.bucket_arn],
+                principals=[bucket_user],
+            )
+        )
+
         ecs_task_role.add_managed_policy(
             aws_iam.ManagedPolicy.from_aws_managed_policy_name(
                 managed_policy_name="AmazonECS_FullAccess"
