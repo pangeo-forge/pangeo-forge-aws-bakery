@@ -52,7 +52,7 @@ RUNNER_TOKEN_SECRET_ARN="<ARN of your Runner Token Secret>" # This is outlined i
 PREFECT__CLOUD__AUTH_TOKEN="<A valid Prefect [Tenant token](https://docs.prefect.io/orchestration/concepts/tokens.html#tenant)> to support flow registration"
 PREFECT_PROJECT="<An existing Prefect [Project](https://docs.prefect.io/orchestration/concepts/projects.html#creating-a-project) where the bakery's test flows will be registered>"
 PREFECT_AGENT_LABELS="<A set of Prefect Agent [Labels](https://docs.prefect.io/orchestration/agents/overview.html#labels) which will be registered with the deployed agent to limit which flows should be executed by the agent>"
-BUCKET_USER_ARN="The manually created user whose credentials will be shared via bakeries.yaml"
+BUCKET_USER_ARN="The manually created user whose credentials will be shared via bakeries.yaml" # This is outlined in Deployment - Standard Deployments
 ```
 
 
@@ -109,6 +109,15 @@ You should create a Secret in AWS Secrets Manager (in your deployment region) in
 ```
 
 Take a note of the ARN for the token and put it in your `.env` file under the key of `RUNNER_TOKEN_SECRET_ARN`.
+
+
+### Bucket IAM User
+
+To be able to utilise S3 Flow Storage, a IAM User must be created in the AWS Account the Bakery is being deployed into.
+
+This user needs no permissions applied to them, these are applied on Bakery deployment.
+
+You can follow the instructions [here](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) to create the IAM User, once this is done, place the value of the IAM Users ARN into `.env` under `BUCKET_USER_ARN`.
 
 
 ## Standard Deployments
