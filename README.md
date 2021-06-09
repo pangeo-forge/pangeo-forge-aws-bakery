@@ -8,7 +8,8 @@ This repository serves as the provider of an AWS CDK Application which deploys t
 * [🧑‍💻 Development - Getting Started](#getting-started-🏃‍♀️)
 * [🧑‍💻 Development - Makefile goodness](#makefile-goodness)
 * [🚀 Deployment - Prerequisites](#prerequisites)
-* [🚀 Deployment - Standard Deployments](#standard-deployments)
+* [🚀 Deployment - Deploying](#deploying)
+* [🚀 Deployment - Destroying](#destroying)
 
 # Development
 
@@ -16,10 +17,10 @@ This repository serves as the provider of an AWS CDK Application which deploys t
 
 To develop on this project, you should have the following installed:
 
-* Node 14 (We recommend using NVM [Node Version Manager](https://github.com/nvm-sh/nvm))
+* [Node 14](https://nodejs.org/en/) (We recommend using NVM [Node Version Manager](https://github.com/nvm-sh/nvm))
 * [AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html) - There is a `package.json` in the repository, it's recommended to run `npm install` in the repository root and make use of `npx <command>` rather than globally installing AWS CDK
-* Python 3.8.* (We recommend using [pyenv](https://github.com/pyenv/pyenv))
-* [pipenv](https://github.com/pypa/pipenv)
+* [Python 3.8.*](https://www.python.org/downloads/) (We recommend using [Pyenv](https://github.com/pyenv/pyenv) to handle Python versions)
+* [Poetry](https://github.com/python-poetry/poetry)
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html)
 * [Docker](https://docs.docker.com/get-docker/)
 
@@ -29,34 +30,41 @@ If you're developing on Windows, we'd recommend using either [Git BASH](https://
 
 ## Getting started 🏃‍♀️
 
-To get setup for overall development, ensure you've installed all the above [requirements](#requirements). You can then run the following to install all development dependencies (NPM & Python):
+_**NOTE:** All `make` commands should be run from the **root** of the repository_
+
+### Installing dependencies
+
+This project requires some Python and Node dependencies (Including `cdk`, `prefect`, and `python-dotenv`), these are so that:
+
+* We can deploy the Bakery AWS infrastructure
+* We can register flows for testing
+* We can use `.env` files to provide both Prefect Flows and CDK with environment variables
+
+To install the dependencies, run:
 
 ```bash
-$ make install-dev
+$ make install # Runs `npm install` to install CDK and `poetry install` to install all the Python dependencies required
 ```
 
-If however, you're only deploying the repository as-is and not making code changes, you can only install the production required dependencies with:
+### `.env` file
+
+A file named `.env` is expected in the root of the repository to store variables used within deployment, the expected values are:
 
 ```bash
-$ make install
-```
+# SET BY YOU MANUALLY:
 
-A file named `.env` is expected in the root of the repository, the expected values are:
-
-```bash
 OWNER="<your-name>"
-IDENTIFIER="<a unique value to tie to your deployment>"
-AWS_DEFAULT_REGION="<the AWS region you're deploying to>"
-AWS_DEFAULT_PROFILE="<your named AWS CLI Profile to use for deployment>"
-RUNNER_TOKEN_SECRET_ARN="<ARN of your Runner Token Secret>" # This is outlined in Deployment - Standard Deployments
-PREFECT__CLOUD__AUTH_TOKEN="<A valid Prefect [Tenant token](https://docs.prefect.io/orchestration/concepts/tokens.html#tenant)> to support flow registration"
-PREFECT_PROJECT="<An existing Prefect [Project](https://docs.prefect.io/orchestration/concepts/projects.html#creating-a-project) where the bakery's test flows will be registered>"
-PREFECT_AGENT_LABELS="<A set of Prefect Agent [Labels](https://docs.prefect.io/orchestration/agents/overview.html#labels) which will be registered with the deployed agent to limit which flows should be executed by the agent>"
-BUCKET_USER_ARN="The manually created user whose credentials will be shared via bakeries.yaml" # This is outlined in Deployment - Standard Deployments
+IDENTIFIER="<a-unique-value-to-tie-to-your-deployment>"
+AWS_DEFAULT_REGION="<your-preferred-aws-region>"
+AWS_DEFAULT_PROFILE="<your-preferred-named-aws-cli-profile>"
+RUNNER_TOKEN_SECRET_ARN="<arn-of-your-runner-token-secret>" # See [Deployment - Prerequisites > Prerequisites > cloud.prefect.io Runner Token]
+PREFECT__CLOUD__AUTH_TOKEN="<value-of-tenant-token>" # See https://docs.prefect.io/orchestration/concepts/tokens.html#tenant - This is used to support flow registration
+PREFECT_PROJECT="<name-of-a-prefect-project>" # See https://docs.prefect.io/orchestration/concepts/projects.html#creating-a-project - This is where the bakery's test flows will be registered
+PREFECT_AGENT_LABELS="<a-set-of-prefect-agent-labels>" # See https://docs.prefect.io/orchestration/agents/overview.html#labels - These will be registered with the deployed agent to limit which flows should be executed by the agent
+BUCKET_USER_ARN="<arn-of-your-bucket-iam-user>" # See [Deployment > Prerequisites > Bucket IAM User]
 ```
 
-
-An example that you can modify and rename to `.env` is provided: `example.env`
+An example called `example.env` is available for you to copy, rename, and fill out accordingly.
 
 ## Makefile goodness
 
@@ -64,11 +72,7 @@ A `Makefile` is available in the root of the repository to abstract away commonl
 
 **`make install`**
 
-> This will run `npm install` and `pipenv install` on the repo root, installing only the dependencies needed for a production deployment
-
-**`make install`**
-
-> This will run `npm install` and `pipenv install --dev` on the repo root, installing the dependencies needed for development of this project
+> This will run `npm install` and `pipenv install` on the repo root, installing the dependencies needed for development of this project
 
 **`make lint`**
 
@@ -110,7 +114,6 @@ You should create a Secret in AWS Secrets Manager (in your deployment region) in
 
 Take a note of the ARN for the token and put it in your `.env` file under the key of `RUNNER_TOKEN_SECRET_ARN`.
 
-
 ### Bucket IAM User
 
 To be able to utilise S3 Flow Storage, a IAM User must be created in the AWS Account the Bakery is being deployed into.
@@ -119,23 +122,26 @@ This user needs no permissions applied to them, these are applied on Bakery depl
 
 You can follow the instructions [here](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) to create the IAM User, once this is done, place the value of the IAM Users ARN into `.env` under `BUCKET_USER_ARN`.
 
+This value is provided to `bakeries.yaml` so that Flows may be registered to your Bakery.
 
-## Standard Deployments
+## Deploying
 
-For standard deploys, you can check _what_ you'll be deploying by running:
+You can check _what_ you'll be deploying by running:
 
 ```bash
-$ make diff # Outputs the CDK Diff
+$ make diff # Outputs the result of `cdk diff`
 ```
 
-To deploy the infrastructure, you can run:
+To deploy the AWS infrastructure required to host your Bakery, you can run:
 
 ```bash
-$ make deploy # Deploys BakeryStack
+$ make deploy # Deploys Bakery AWS infrastructure
 ```
 
-To destroy the infrastructure, you can run:
+## Destroying
+
+To destroy the Bakery infrastructure within AWS, you can run:
 
 ```bash
-$ make destroy # Destroys BakeryStack
+$ make destroy # Destroys the Bakery infrastructure
 ```
