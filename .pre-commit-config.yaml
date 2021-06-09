@@ -5,49 +5,49 @@ repos:
     hooks:
       - id: trailing-whitespace-fixer
         name: trailing-whitespace-fixer
-        entry: pipenv run trailing-whitespace-fixer
+        entry: poetry run trailing-whitespace-fixer
         language: system
 
       - id: end-of-file-fixer
         name: end-of-file-fixer
-        entry: pipenv run end-of-file-fixer
+        entry: poetry run end-of-file-fixer
         language: system
 
       - id: check-docstring-first
         name: check-docstring-first
-        entry: pipenv run check-docstring-first
+        entry: poetry run check-docstring-first
         types: [python]
         language: system
 
       - id: check-json
         name: check-json
-        entry: pipenv run check-json
+        entry: poetry run check-json
         types: [json]
         language: system
 
       - id: check-yaml
         name: check-yaml
-        entry: pipenv run check-yaml
+        entry: poetry run check-yaml
         types: [yaml]
         language: system
 
       - id: isort
         name: isort
         language: system
-        entry: pipenv run isort
+        entry: poetry run isort
         types: [python]
         args: ["--check-only", "--profile", "black", "cdk/", "flow_test/"]
 
       - id: black
         name: black
         language: system
-        entry: pipenv run black
+        entry: poetry run black
         types: [python]
         args: ["--check", "cdk/", "flow_test/", "--line-length", "100"]
 
       - id: flake8
         name: flake8
         language: system
-        entry: pipenv run flake8
+        entry: poetry run flake8
         types: [python]
         args: ["--max-line-length", "100", "cdk/", "flow_test/"]
