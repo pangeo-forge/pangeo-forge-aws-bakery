@@ -2,7 +2,6 @@ import os
 
 from aws_cdk import (
     aws_ec2,
-    aws_ecr,
     aws_ecs,
     aws_ecs_patterns,
     aws_iam,
@@ -148,18 +147,18 @@ class BakeryStack(core.Stack):
 
         prefect_ecs_agent_task_definition.add_container(
             id=f"prefect-ecs-agent-task-container-{identifier}",
-            image=aws_ecs.ContainerImage.from_ecr_repository(
-                aws_ecr.Repository.from_repository_name(
-                    self,
-                    id=f"pangeo-forge-aws-bakery-agent-repo-{identifier}",
-                    repository_name="pangeo-forge-aws-bakery-agent",
-                )
-            ),
+            image=aws_ecs.ContainerImage.from_registry(os.environ["BAKERY_IMAGE"]),
             port_mappings=[aws_ecs.PortMapping(container_port=8080, host_port=8080)],
             logging=aws_ecs.LogDriver.aws_logs(stream_prefix="ecs-agent"),
             environment={"PREFECT__CLOUD__AGENT__LABELS": os.environ["PREFECT_AGENT_LABELS"]},
             secrets={"PREFECT__CLOUD__AGENT__AUTH_TOKEN": runner_token_secret},
             command=[
+                "prefect",
+                "agent",
+                "ecs",
+                "start",
+                "--agent-address",
+                "http://:8080",
                 "--cluster",
                 cluster.cluster_arn,
                 "--task-role-arn",
