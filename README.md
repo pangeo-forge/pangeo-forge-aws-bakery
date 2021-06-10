@@ -19,7 +19,7 @@ To develop on this project, you should have the following installed:
 
 * [Node 14](https://nodejs.org/en/) (We recommend using NVM [Node Version Manager](https://github.com/nvm-sh/nvm))
 * [AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html) - There is a `package.json` in the repository, it's recommended to run `npm install` in the repository root and make use of `npx <command>` rather than globally installing AWS CDK
-* [Python 3.8.*](https://www.python.org/downloads/) (We recommend using [Pyenv](https://github.com/pyenv/pyenv) to handle Python versions)
+* [Python 3.8.10](https://www.python.org/downloads/) (We recommend using [Pyenv](https://github.com/pyenv/pyenv) to handle Python versions)
 * [Poetry](https://github.com/python-poetry/poetry)
 * [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html)
 * [Docker](https://docs.docker.com/get-docker/)
@@ -62,6 +62,7 @@ PREFECT__CLOUD__AUTH_TOKEN="<value-of-tenant-token>" # See https://docs.prefect.
 PREFECT_PROJECT="<name-of-a-prefect-project>" # See https://docs.prefect.io/orchestration/concepts/projects.html#creating-a-project - This is where the bakery's test flows will be registered
 PREFECT_AGENT_LABELS="<a-set-of-prefect-agent-labels>" # See https://docs.prefect.io/orchestration/agents/overview.html#labels - These will be registered with the deployed agent to limit which flows should be executed by the agent
 BUCKET_USER_ARN="<arn-of-your-bucket-iam-user>" # See [Deployment > Prerequisites > Bucket IAM User]
+BAKERY_IMAGE="<pangeo-forge-bakery-images-image-you-wish-to-use>" # See [Deployment > Prerequisites > Bakery Image]
 ```
 
 An example called `example.env` is available for you to copy, rename, and fill out accordingly.
@@ -123,6 +124,16 @@ This user needs no permissions applied to them, these are applied on Bakery depl
 You can follow the instructions [here](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_users_create.html) to create the IAM User, once this is done, place the value of the IAM Users ARN into `.env` under `BUCKET_USER_ARN`.
 
 This value is provided to `bakeries.yaml` so that Flows may be registered to your Bakery.
+
+### Bakery Image
+
+To be able to register and run Recipes as Prefect Flows, your Bakery must be running one of the `pangeo-forge-bakery-images` images in both your Prefect Agent **and** your Flow & Dask tasks.
+
+You can find more information on the `pangeo-forge-bakery-images` [here](https://github.com/pangeo-forge/pangeo-forge-bakery-images). Once you've selected which tag you wish to support, you need to add an entry into `.env` under the name `BAKERY_IMAGE`. See below for an example:
+
+```bash
+BAKERY_IMAGE="pangeo/pangeo-forge-bakery-images:pangeonotebook-2021.05.15_prefect-0.14.19_pangeoforgerecipes-0.3.4"
+```
 
 ## Deploying
 
