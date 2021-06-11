@@ -62,7 +62,7 @@ def register_recipe(recipe: BaseRecipe):
     flow.storage = storage.S3(bucket=outputs["storage_bucket_name_output"])
     flow.run_config = ECSRun(
         image=os.environ["BAKERY_IMAGE"],
-        labels=json.loads(os.environ["PREFECT_AGENT_LABELS"]),
+        labels=json.loads(os.environ["PREFECT__CLOUD__AGENT__LABELS"]),
         task_definition=definition,
         run_task_kwargs={"tags": tags["tag_list"]},
     )

@@ -150,7 +150,9 @@ class BakeryStack(core.Stack):
             image=aws_ecs.ContainerImage.from_registry(os.environ["BAKERY_IMAGE"]),
             port_mappings=[aws_ecs.PortMapping(container_port=8080, host_port=8080)],
             logging=aws_ecs.LogDriver.aws_logs(stream_prefix="ecs-agent"),
-            environment={"PREFECT__CLOUD__AGENT__LABELS": os.environ["PREFECT_AGENT_LABELS"]},
+            environment={
+                "PREFECT__CLOUD__AGENT__LABELS": os.environ["PREFECT__CLOUD__AGENT__LABELS"]
+            },
             secrets={"PREFECT__CLOUD__AGENT__AUTH_TOKEN": runner_token_secret},
             command=[
                 "prefect",

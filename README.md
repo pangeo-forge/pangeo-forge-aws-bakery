@@ -10,6 +10,7 @@ This repository serves as the provider of an AWS CDK Application which deploys t
 * [🚀 Deployment - Prerequisites](#prerequisites)
 * [🚀 Deployment - Deploying](#deploying)
 * [🚀 Deployment - Destroying](#destroying)
+* [📊 Flows - Registering the test Recipe](#registering-the-test-recipe)
 
 # Development
 
@@ -60,7 +61,7 @@ AWS_DEFAULT_PROFILE="<your-preferred-named-aws-cli-profile>"
 RUNNER_TOKEN_SECRET_ARN="<arn-of-your-runner-token-secret>" # See [Deployment - Prerequisites > Prerequisites > cloud.prefect.io Runner Token]
 PREFECT__CLOUD__AUTH_TOKEN="<value-of-tenant-token>" # See https://docs.prefect.io/orchestration/concepts/tokens.html#tenant - This is used to support flow registration
 PREFECT_PROJECT="<name-of-a-prefect-project>" # See https://docs.prefect.io/orchestration/concepts/projects.html#creating-a-project - This is where the bakery's test flows will be registered
-PREFECT_AGENT_LABELS="<a-set-of-prefect-agent-labels>" # See https://docs.prefect.io/orchestration/agents/overview.html#labels - These will be registered with the deployed agent to limit which flows should be executed by the agent
+PREFECT__CLOUD__AGENT__LABELS="<a-set-of-prefect-agent-labels>" # See https://docs.prefect.io/orchestration/agents/overview.html#labels - These will be registered with the deployed agent to limit which flows should be executed by the agent
 BUCKET_USER_ARN="<arn-of-your-bucket-iam-user>" # See [Deployment > Prerequisites > Bucket IAM User]
 BAKERY_IMAGE="<pangeo-forge-bakery-images-image-you-wish-to-use>" # See [Deployment > Prerequisites > Bakery Image]
 ```
@@ -156,3 +157,23 @@ To destroy the Bakery infrastructure within AWS, you can run:
 ```bash
 $ make destroy # Destroys the Bakery infrastructure
 ```
+
+# Flows
+
+## Registering the test Recipe
+
+For quick testing of your Bakery deployment, there is a Recipe setup as a Flow within `flow_test/` that you can register and run. Before you register the example Flow, you must have the values of `PREFECT__CLOUD__AUTH_TOKEN`, `PREFECT_PROJECT`, `PREFECT__CLOUD__AGENT__LABELS`, `BAKERY_IMAGE`, and `IDENTIFIER` present and populated in `.env`. You must also have run [`make install`](#makefile-goodness).
+
+When your `.env` is populated and you've installed the project dependencies, you can register the Flow by running:
+
+```bash
+$ poetry run dotenv run python3 flow_test/oisst_recipe.py
+
+[2021-06-11 12:30:03+0100] INFO - prefect.S3 | Uploading test-noaa-flow/2021-06-11t11-30-03-443149-00-00 to <storage-bucket>
+Flow URL: https://cloud.prefect.io/<your-account>/flow/1429ce74-1be7-412f-bc03-2553d79d7752
+ └── ID: c8de9a87-a534-4b86-a5cc-b02dc61e58bc
+ └── Project: <PREFECT_PROJECT>
+ └── Labels: <PREFECT__CLOUD__AGENT__LABELS>
+```
+
+You can then navigate to [cloud.prefect.io](https://cloud.prefect.io/), find your Flow, and run it.
