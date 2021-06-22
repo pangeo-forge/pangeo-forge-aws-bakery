@@ -14,8 +14,7 @@ from prefect.executors.dask import DaskExecutor
 from prefect.run_configs.ecs import ECSRun
 from rechunker.executors import PrefectPipelineExecutor
 from s3fs import S3FileSystem
-
-from flow_test.utils import generate_tags, retrieve_stack_outputs
+from utils import generate_tags, retrieve_stack_outputs
 
 
 def set_log_level(func):

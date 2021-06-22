@@ -96,6 +96,10 @@ A `Makefile` is available in the root of the repository to abstract away commonl
 
 > This will run a `cdk destroy` using the contents of your `.env` file. The destroy is auto-approved, so **make sure** you know what you're destroying first!
 
+**`make register-flow`**
+
+> This uses the bakery image defined in `BAKERY_IMAGE` to register your Flow with Prefect. It takes a parameter `flow` which is the Python file within `flow_test/` you'd like to use. You would use it like: `$ make register-flow flow=oisst_recipe.py`
+
 # Deployment
 
 ## Prerequisites
@@ -162,12 +166,12 @@ $ make destroy # Destroys the Bakery infrastructure
 
 ## Registering the test Recipe
 
-For quick testing of your Bakery deployment, there is a Recipe setup as a Flow within `flow_test/` that you can register and run. Before you register the example Flow, you must have the values of `PREFECT__CLOUD__AUTH_TOKEN`, `PREFECT_PROJECT`, `PREFECT__CLOUD__AGENT__LABELS`, `BAKERY_IMAGE`, and `IDENTIFIER` present and populated in `.env`. You must also have run [`make install`](#makefile-goodness).
+For quick testing of your Bakery deployment, there is a Recipe setup as a Flow within `flow_test/` that you can register and run. Before you register the example Flow, you must have the values of `PREFECT__CLOUD__AUTH_TOKEN`, `PREFECT_PROJECT`, `PREFECT__CLOUD__AGENT__LABELS`, `BAKERY_IMAGE`, `IDENTIFIER`, `AWS_DEFAULT_PROFILE`, and `AWS_DEFAULT_REGION` present and populated in `.env`. You must also have run [`make install`](#makefile-goodness).
 
 When your `.env` is populated and you've installed the project dependencies, you can register the Flow by running:
 
 ```bash
-$ poetry run dotenv run python3 flow_test/oisst_recipe.py
+$ make register-flow flow=<name-of-flow-file-in-flow_test/>.py
 
 [2021-06-11 12:30:03+0100] INFO - prefect.S3 | Uploading test-noaa-flow/2021-06-11t11-30-03-443149-00-00 to <storage-bucket>
 Flow URL: https://cloud.prefect.io/<your-account>/flow/1429ce74-1be7-412f-bc03-2553d79d7752
