@@ -1,5 +1,7 @@
 # pangeo-forge AWS Bakery ☁️🍞
 
+# THIS IS DEPRECATED.   SEE https://github.com/yuvipanda/pangeo-forge-cloud-federation/pull/5 for how to run the new pangeo-forge beam recipes on Apache Flink on AWS
+
 This repository serves as the provider of an AWS CDK Application which deploys the necessary infrastructure to provide a `pangeo-forge` Bakery on AWS
 
 # Contents
